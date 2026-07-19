@@ -153,12 +153,18 @@ st.markdown("""
 
 # --- SOL MENÜ ---
 with st.sidebar:
-    st.markdown("<div style='padding: 10px 0;'><h3 style='margin:0;'>Envanter Paneli</h3><span style='color:#64748b; font-size:12px;'>Bulut Sürüm v5.1 (Güvenli)</span></div>", unsafe_allow_html=True)
+    st.markdown("<div style='padding: 10px 0;'><h3 style='margin:0;'>Envanter Paneli</h3><span style='color:#64748b; font-size:12px;'>Bulut Sürüm v5.2 (Güvenli)</span></div>", unsafe_allow_html=True)
     st.markdown("---")
     menu = st.radio("Modüller:", ["Mevcut Stok Listesi", "Yeni Ürün Tanımla", "Sistem Raporu & Ayarlar"])
     st.markdown("---")
+    
+    # YENİLEME BUTONU (Şifreyi sıfırlamadan verileri çeker)
+    if st.button("🔄 Verileri Yenile", use_container_width=True):
+        st.rerun()
+        
+    st.markdown("---")
     st.caption("Erişim Yetkisi: Yönetici")
-    if st.button("Güvenli Çıkış Yap"):
+    if st.button("Güvenli Çıkış Yap", use_container_width=True):
         st.session_state.sistem_acik = False
         st.rerun()
 
