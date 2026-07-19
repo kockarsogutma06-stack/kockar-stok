@@ -4,6 +4,7 @@ import re
 import requests
 import base64
 import gspread
+import json
 from google.oauth2.service_account import Credentials
 from fpdf import FPDF
 
@@ -28,26 +29,12 @@ if not st.session_state.sistem_acik:
                 st.error("Hatalı veya yetkisiz şifre denemesi!")
     st.stop()
 
-# --- 2. GOOGLE SHEETS VE IMGBB BAĞLANTILARI ---
+# --- 2. GOOGLE SHEETS VE IMGBB BAĞLANTILARI (GÜVENLİ KASA KULLANIMI) ---
 DEFAULT_KATEGORILER = ["Kompresör Grubu", "Chiller Grubu", "Soğutma Grubu", "Diğer"]
 
-# ImgBB API Anahtarı
-IMGBB_API_KEY = "c19ee125988fca5dcdf2eb5e942e599c"
-
-# Google Cloud Hizmet Hesabı Bilgileri
-GOOGLE_CREDENTIALS = {
-  "type": "service_account",
-  "project_id": "composite-silo-502918-m8",
-  "private_key_id": "339c65f0c99f29ab04b0e7219b916ffd1733405b",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC8Zf2k340GcJub\nQEVT2GQRNklPajFrpKFzrUXsGZG2A+k0nW4tc5tCASectTQoDckq9g15iE5K+1aR\nuXOF1Z+fmEHi4n9na4pr+Cv45BS6xYy1dHZzsg05O+FQ/bCIBlgdFIc5tZZX2NZt\nGFNUvmETjSbf/BkQoIXSI9AA/y8GUQV1o0GH5O8Qnxj6z4xYsSefBFJT85a25Wn+\n9bfUMRXSxL0ZwAbKWYvdnPDb9kO0grZQOyBgrN4qAqAgDyBW5zzC038/BoHUNUA5\noo0ucZ9yLDAiUIzcdwLUWMbjVTSsNQwzjHj5xGuM+evis+w7o7VzQnAOBzFZXCBO\nznJtxxuXAgMBAAECggEALzKz9TKmL3dVnHLhC2zaQO+jNRiLEgcYBZViv4/2T62y\nJmLMX+mm+0WzyVAiJWiyvacP4CMUTjeiS/a0aNKIX2CzHOaWeW/ZKUxuo7dsNBBa\nvHjVVg3Ev1Jvk61CpQlF2N80M3J5HD/wFDu0YLYjNtU1aIbNNruoWulq6l0DyGZk\nkJvSBG8KUoMsIZT9RK77DaEG2dAQ6ZrQxfBh7JKJig/MWdXzarKP67T3kNfvEQkX\n8ZeI1qmxecVmnsZ5EkEw9PRpRR3N+95lOKfWh09jJhYY0sFCoaUX1bea5pGHwigQ\n+nFuRem/pOqHK9L5VCbvZ0+phcM/UgvrRdJH3NuJdQKBgQDr4XkW2KifGrZqJOfi\nk1gg7sXI26V3oRsLKlEBWWotOpyZ8nHXIOH0BwYbckGDzf5izDVIiGCLG8/C29jg\nbqetP5ebiuFkWSCgRFOi09x4ZznnR2xJRRBWIGgCZ91ioVTP8nIGbkb3YDkyhnA4\nm3LZzNuhfusfVmN0lye/zkU39QKBgQDMd7n0q1Yu/XigqoaQtio2+caUNyeS9qQ/\n3lDgOHTQZs1ka5Yr2O4XfLO8vcNwV4bESH4FVvvn2iFtGfilunMy1JyMsu93/5es\n9BlUgMTnd1LhJWPFT9pYbiCkNCyHUmhgU57UUWitJWICEalWOgje+56bJSAffocb\nqFi76fIp2wKBgQDLt+LVqW8QYoiy6Ybft3PAlZd6HsEsrZZmsThe2vOJdnpztuE8\n9ChRkpNitu4AQLN4bneCWk5PNkjcOPV49/iW9zof2vVIrnUwFXLKSQG7dyOaLKRI\nL36pc7mAgmXAXieapQB3r1xZH+CmU1eufArYMkZpluzIFts0gauRyzsa1QKBgAVB\nysksopGguLpAyCbuWBWDxIRJCr5vkveFasTpDq/RBNThI0JLWIvIDAL9SgoYZgGj\n74GJo/5pEFTyxv7T1WRoLQI9E4UdUDQFLqWKjgV5fusFABSxoeaGJlaydLah+scH\nP10sHqnc/TEabSUnZtT82S4Z/UJyCV0/rdBfCnfjAoGAZrAqDR64bxIYuNN7Usfo\nPqqJ2VLQ898UeaS4w2G9c8g5P/odFmAyWadDbnp91jw8UtAXM7XxqIA3qRJdr+/G\nCFS6C3lhTMSiFw17EttD4/ZWqIExKXm3ZnuL/EBSiW1svklSR7uA4mvIJBEhdXIr\n7YkXbDfNq/SowfLhH8zHeCM=\n-----END PRIVATE KEY-----\n",
-  "client_email": "stok-tkp@composite-silo-502918-m8.iam.gserviceaccount.com",
-  "client_id": "114596085233853850994",
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/stok-tkp%40composite-silo-502918-m8.iam.gserviceaccount.com",
-  "universe_domain": "googleapis.com"
-}
+# Şifreleri Streamlit'in Gizli Kasasından Çekiyoruz (Artık kodda görünmeyecek)
+IMGBB_API_KEY = st.secrets["IMGBB_API_KEY"]
+GOOGLE_CREDENTIALS = json.loads(st.secrets["GOOGLE_JSON"])
 
 # Google Bağlantısını Başlat
 @st.cache_resource
@@ -166,11 +153,11 @@ st.markdown("""
 
 # --- SOL MENÜ ---
 with st.sidebar:
-    st.markdown("<div style='padding: 10px 0;'><h3 style='margin:0;'>Envanter Paneli</h3><span style='color:#64748b; font-size:12px;'>Bulut Sürüm v5.0 (Global)</span></div>", unsafe_allow_html=True)
+    st.markdown("<div style='padding: 10px 0;'><h3 style='margin:0;'>Envanter Paneli</h3><span style='color:#64748b; font-size:12px;'>Bulut Sürüm v5.1 (Güvenli)</span></div>", unsafe_allow_html=True)
     st.markdown("---")
     menu = st.radio("Modüller:", ["Mevcut Stok Listesi", "Yeni Ürün Tanımla", "Sistem Raporu & Ayarlar"])
     st.markdown("---")
-    st.caption("Erisim Yetkisi: Yönetici")
+    st.caption("Erişim Yetkisi: Yönetici")
     if st.button("Güvenli Çıkış Yap"):
         st.session_state.sistem_acik = False
         st.rerun()
